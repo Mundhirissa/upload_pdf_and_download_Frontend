@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>File Upload</title>
+</head>
+<body>
+    <h2>Upload a PDF file</h2>
+    <form id="uploadForm">
+        <input type="file" id="fileInput" name="file" accept=".pdf">
+        <button type="button" onclick="uploadFile()">Upload</button>
+    </form>
+    <div id="message"></div>
+
+     <h2>List of Uploaded Files</h2>
+    <ul id="fileList"></ul>
+
+    <script>
+        function uploadFile() {
+            const fileInput = document.getElementById("fileInput");
+            const file = fileInput.files[0];
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            fetch("http://localhost:8080/api/upload", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.text())
+            .then(message => {
+                document.getElementById("message").textContent = message;
+            })
+            .catch(error => {
+                document.getElementById("message").textContent = "Error: " + error.message;
+            });
+        }
+
+
+  
+        function createDownloadLink(fileId, fileName) {
+            const downloadLink = document.createElement("a");
+            downloadLink.href = `http://localhost:8080/api/download/${fileId}`;
+            downloadLink.textContent = fileName;
+            downloadLink.download = fileName;
+            return downloadLink;
+        }
+
+        function refreshFileList() {
+            fetch("http://localhost:8080/api/list")
+            .then(response => response.json())
+            .then(files => {
+                const fileListElement = document.getElementById("fileList");
+                fileListElement.innerHTML = ""; // Clear the current list
+
+                files.forEach(file => {
+                    const listItem = document.createElement("li");
+                    const downloadLink = createDownloadLink(file.id, file.filename);
+                    listItem.appendChild(downloadLink);
+                    fileListElement.appendChild(listItem);
+                });
+            })
+            .catch(error => {
+                console.error("Error fetching file list:", error);
+            });
+        }
+         window.onload = refreshFileList;
+
+
+
+
+
+    </script>
+</body>
+</html>
